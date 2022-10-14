@@ -2,17 +2,36 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Bullet : MonoBehaviour
+public class Bullet : PlayerMove
 {
-    Rigidbody2D rigid;
+    Vector3 direction;
+
+    
+    public void Shoot(Vector3 direction)
+    {
+        this.direction = direction;
+        Destroy(gameObject, 2f);
+    }
+    
     void Start()
     {
-        rigid = GetComponent<Rigidbody2D>();
+        transform.eulerAngles = direction;
     }
 
     
     void Update()
     {
-        rigid.velocity = Vector3.forward;
+        transform.Translate((direction.normalized * Time.deltaTime) * 10);
+    }
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Wall"))
+        {
+            var playerScript = GameObject.Find("Player").
+                GetComponent<PlayerMove>();
+
+            playerScript.BulletWallParticle(gameObject.transform.position);
+            Destroy(gameObject);
+        }
     }
 }

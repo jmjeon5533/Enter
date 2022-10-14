@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
 using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
@@ -14,37 +16,50 @@ public class PlayerMove : MonoBehaviour
     Rigidbody2D rigid;
     bool isdash, isfire;
 
-    Vector2 mouse;
+    
+
+    Camera characterCamera;
+
+    [SerializeField]
+    GameObject bulletPrefab;
+
+    [SerializeField]
+    ParticleSystem Bullet_Wall;
+
+    
+
+    
 
     [SerializeField]
     GameObject arm;
     private void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
+        
     }
     void Start()
     {
-
+        
     }
 
     
     void Update()
     {
-        mouse = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        angle = Mathf.Atan2(mouse.y - transform.position.y, 
-            mouse.x - transform.position.x) * Mathf.Rad2Deg;
-        arm.transform.rotation = Quaternion.AngleAxis(angle-180, Vector3.forward);
+
 
         Vector3 MousePoint = Camera.main.ScreenToWorldPoint
             (new Vector3(Input.mousePosition.x, Input.mousePosition.y,
             -Camera.main.transform.position.z));
+        
         h = Input.GetAxisRaw("Horizontal");
         v = Input.GetAxisRaw("Vertical");
 
-        cam.transform.position =
+        
+            cam.transform.position =
             new Vector3(transform.position.x + (MousePoint.x * 0.3f),
             transform.position.y + (MousePoint.y * 0.3f),
             -10);
+        
         Click();
     }
     private void FixedUpdate()
@@ -59,7 +74,7 @@ public class PlayerMove : MonoBehaviour
             Debug.Log("Dash");
             StartCoroutine(Dash());
         }
-        if (Input.GetMouseButtonDown(0) && !isfire)
+        if (Input.GetMouseButton(0) && !isfire)
         {
             Debug.Log("Fire");
             StartCoroutine(Fire());
@@ -75,8 +90,24 @@ public class PlayerMove : MonoBehaviour
     IEnumerator Fire()
     {
         isfire = true;
+        var bullet = Instantiate(bulletPrefab).GetComponent<Bullet>();
+        var direction = Camera.main.ScreenToWorldPoint(Input.mousePosition)
+            - arm.transform.position;
 
-        yield return new WaitForSeconds(0.5f);
+        direction.z = 0;
+
+        bullet.transform.position = arm.transform.position;
+        bullet.Shoot(direction);
+        yield return new WaitForSeconds(0.3f);
         isfire = false;
+    }
+    public void BulletWallParticle(Vector2 BulletPosition)
+    {
+        Bullet_Wall.transform.position = BulletPosition;
+        Bullet_Wall.Play();
+    }
+    public void LookMouseCursor()
+    {
+        
     }
 }
